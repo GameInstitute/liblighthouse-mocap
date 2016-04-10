@@ -64,14 +64,14 @@ def update(dt):
     line_end_x = int(math.cos(step) * AMPLITUDE + (SCREEN_WIDTH / 2))
     line_end_y = int(-1 * math.sin(step) * AMPLITUDE + SCREEN_HEIGHT)
     try:
-        lighthouse_slope = round(slope(line_end_x, line_end_y, line_start_x, line_start_y))
+        lighthouse_slope = round(slope(line_end_x, line_end_y, line_start_x, line_start_y), 1)
     except ZeroDivisionError:
         lighthouse_slope = 0
 
     # Find slope from circle to line start
     i = 0
     for circle in circles:
-        circle_slope = round(slope(circle.x, circle.y, line_start_x, line_start_y))
+        circle_slope = round(slope(circle.x, circle.y, line_start_x, line_start_y), 1)
         if circle_slope == lighthouse_slope and not circle.was_hit:
             print "Circle %i hit" % i
             circle.color = [1, 0, 0]
@@ -79,6 +79,12 @@ def update(dt):
             circle.time_hit = time.time()
             circle.time_elapsed = circle.time_hit - start_time
             print "  Time since start:", circle.time_hit - start_time
+            if circles[0].was_hit and circles[1].was_hit:
+                print "Device 1 Delta:", circles[0].time_elapsed - circles[1].time_elapsed
+            if circles[2].was_hit and circles[3].was_hit:
+                print "Device 2 Delta:", circles[2].time_elapsed - circles[3].time_elapsed
+            if circles[4].was_hit and circles[5].was_hit:
+                print "Device 3 Delta:", circles[4].time_elapsed - circles[5].time_elapsed
         elif circle.was_hit:
             pass
         else:
@@ -95,8 +101,9 @@ def on_draw():
     window.clear()
     pyglet.gl.glClear(pyglet.gl.GL_COLOR_BUFFER_BIT)
 
-    #device1_sprite.draw()
+    device1_sprite.draw()
     device2_sprite.draw()
+    device3_sprite.draw()
 
     pyglet.gl.glLineWidth(LINE_WIDTH)
     pyglet.gl.glColor3f(1,1,1)
@@ -115,39 +122,57 @@ def on_draw():
 
 start_time = time.time()
 
+# Sensor positions
+base_distance = 200
+y_distance = SCREEN_HEIGHT - base_distance
+back_distance = SCREEN_HEIGHT - (base_distance * 2)
+far_back_distance = SCREEN_HEIGHT - (base_distance * 3)
+
 # Sensor circles
 circles = []
-#circles.append(Circle(x=SCREEN_WIDTH/2 - sensor_distance, y=SCREEN_HEIGHT/2))
-#circles.append(Circle(x=SCREEN_WIDTH/2 + sensor_distance, y=SCREEN_HEIGHT/2))
-circles.append(Circle(x=SCREEN_WIDTH/2 - sensor_distance, y=SCREEN_HEIGHT/2 - back_sensor_distance))
-circles.append(Circle(x=SCREEN_WIDTH/2 + sensor_distance, y=SCREEN_HEIGHT/2 - back_sensor_distance))
+circles.append(Circle(x=SCREEN_WIDTH/2 - sensor_distance, y=y_distance))
+circles.append(Circle(x=SCREEN_WIDTH/2 + sensor_distance, y=y_distance))
+circles.append(Circle(x=SCREEN_WIDTH/2 - sensor_distance, y=back_distance))
+circles.append(Circle(x=SCREEN_WIDTH/2 + sensor_distance, y=back_distance))
+circles.append(Circle(x=SCREEN_WIDTH/2 - sensor_distance, y=far_back_distance))
+circles.append(Circle(x=SCREEN_WIDTH/2 + sensor_distance, y=far_back_distance))
 
 # Timer labels
 label_distance = 15
 labels = []
-#labels.append(pyglet.text.Label("", font_size=11,
-#                                x=SCREEN_WIDTH/2 - sensor_distance + label_distance,
-#                                y=SCREEN_HEIGHT/2 + label_distance,
-#                                anchor_x='left', anchor_y='center'))
-#labels.append(pyglet.text.Label("", font_size=11,
-#                                x=SCREEN_WIDTH/2 + sensor_distance + label_distance,
-#                                y=SCREEN_HEIGHT/2 + label_distance,
-#                                anchor_x='left', anchor_y='center'))
 labels.append(pyglet.text.Label("", font_size=11,
                                 x=SCREEN_WIDTH/2 - sensor_distance + label_distance,
-                                y=SCREEN_HEIGHT/2 - back_sensor_distance + label_distance,
+                                y=y_distance + label_distance,
                                 anchor_x='left', anchor_y='center'))
 labels.append(pyglet.text.Label("", font_size=11,
                                 x=SCREEN_WIDTH/2 + sensor_distance + label_distance,
-                                y=SCREEN_HEIGHT/2 - back_sensor_distance + label_distance,
+                                y=y_distance + label_distance,
+                                anchor_x='left', anchor_y='center'))
+labels.append(pyglet.text.Label("", font_size=11,
+                                x=SCREEN_WIDTH/2 - sensor_distance + label_distance,
+                                y=back_distance + label_distance,
+                                anchor_x='left', anchor_y='center'))
+labels.append(pyglet.text.Label("", font_size=11,
+                                x=SCREEN_WIDTH/2 + sensor_distance + label_distance,
+                                y=back_distance + label_distance,
+                                anchor_x='left', anchor_y='center'))
+labels.append(pyglet.text.Label("", font_size=11,
+                                x=SCREEN_WIDTH/2 - sensor_distance + label_distance,
+                                y=far_back_distance + label_distance,
+                                anchor_x='left', anchor_y='center'))
+labels.append(pyglet.text.Label("", font_size=11,
+                                x=SCREEN_WIDTH/2 + sensor_distance + label_distance,
+                                y=far_back_distance + label_distance,
                                 anchor_x='left', anchor_y='center'))
 
 # Device sprites
 device = pyglet.image.load('device.png')
-#device1_sprite = pyglet.sprite.Sprite(device, x=SCREEN_WIDTH//2 - (device.width/2),
-#                                      y=SCREEN_HEIGHT//2 - (device.height/2))
+device1_sprite = pyglet.sprite.Sprite(device, x=SCREEN_WIDTH//2 - (device.width/2),
+                                      y=y_distance - (device.height/2))
 device2_sprite = pyglet.sprite.Sprite(device, x=SCREEN_WIDTH//2 - (device.width/2),
-                                      y=SCREEN_HEIGHT//2 - back_sensor_distance - (device.height/2))
+                                      y=back_distance - (device.height/2))
+device3_sprite = pyglet.sprite.Sprite(device, x=SCREEN_WIDTH//2 - (device.width/2),
+                                      y=far_back_distance - (device.height/2))
 
 pyglet.clock.schedule_interval(update, 0.016)
 pyglet.app.run()
